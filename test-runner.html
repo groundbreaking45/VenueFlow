@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VenueFlow — Test Runner</title>
+  <meta name="description" content="VenueFlow automated unit test runner — 80 tests across 12 suites" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -34,10 +35,10 @@
       font-weight: 700;
       font-size: .9rem;
     }
-    .chip-total  { background: rgba(59,130,246,.18); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
-    .chip-pass   { background: rgba(34,197,94,.18);  color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
-    .chip-fail   { background: rgba(239,68,68,.18);  color: #f87171; border: 1px solid rgba(239,68,68,.3); }
-    .chip-pct    { background: rgba(168,85,247,.18); color: #c084fc; border: 1px solid rgba(168,85,247,.3); }
+    .chip-total  { background: rgba(59,130,246,.18);  color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+    .chip-pass   { background: rgba(34,197,94,.18);   color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+    .chip-fail   { background: rgba(239,68,68,.18);   color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+    .chip-pct    { background: rgba(168,85,247,.18);  color: #c084fc; border: 1px solid rgba(168,85,247,.3); }
     .progress-bar-wrap { height: 8px; background: #21262d; border-radius: 4px; margin-bottom: 2rem; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg,#22c55e,#06b6d4); border-radius: 4px; transition: width .8s cubic-bezier(.4,0,.2,1); }
     .suite-block { margin-bottom: 1.5rem; }
@@ -63,59 +64,82 @@
     .test-row.pass { background: rgba(34,197,94,.05); }
     .test-row.fail { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); }
     .icon { font-size: 1rem; flex-shrink: 0; margin-top: .1rem; }
-    .test-name { flex: 1; color: #cdd9e5; }
+    .test-name  { flex: 1; color: #cdd9e5; }
     .test-error { color: #f87171; font-size: .78rem; margin-top: .2rem; font-family: monospace; }
     .footer { margin-top: 2.5rem; text-align: center; color: #484f58; font-size: .8rem; }
   </style>
 </head>
 <body>
   <h1>🧪 VenueFlow Test Runner</h1>
-  <p class="subtitle">Running unit tests for crowd management logic, security, Google Services, and problem statement alignment…</p>
+  <p class="subtitle">
+    Running 80 unit tests across 12 suites — security, rate-limiting, density logic,
+    CSV export, KPI analytics, Google Maps maths, Firebase integrity,
+    incentive thresholds, incident filtering, problem-statement alignment,
+    and code-quality / accessibility assertions…
+  </p>
 
   <div class="summary-bar" id="summary"></div>
   <div class="progress-bar-wrap"><div class="progress-fill" id="progress" style="width:0%"></div></div>
-  <div id="output"></div>
-  <div class="footer">VenueFlow v2 · Test Suite · All results computed in-browser · <span id="runtime"></span></div>
+  <div id="output" role="log" aria-live="polite" aria-label="Test results"></div>
+  <div class="footer">
+    VenueFlow v2.1 · Test Suite · All results computed in-browser ·
+    <span id="runtime"></span>
+  </div>
 
   <script>
   // ─── Inline test framework ───────────────────────────────────────────────
   let _passed = 0, _failed = 0, _total = 0;
   const _results = [];
 
-  function describe(name, fn) { _results.push({ type:'suite', name }); fn(); }
+  function describe(name, fn) { _results.push({ type: 'suite', name }); fn(); }
+
   function it(name, fn) {
     _total++;
     try {
       const r = fn();
       if (r && typeof r.then === 'function') {
-        r.then(() => { _passed++; _results.push({ type:'pass', name }); render(); })
-         .catch(e => { _failed++; _results.push({ type:'fail', name, error: e.message }); render(); });
+        r.then(() => { _passed++; _results.push({ type: 'pass', name }); render(); })
+         .catch(e => { _failed++; _results.push({ type: 'fail', name, error: e.message }); render(); });
         return;
       }
-      _passed++; _results.push({ type:'pass', name });
-    } catch(e) { _failed++; _results.push({ type:'fail', name, error: e.message }); }
+      _passed++;
+      _results.push({ type: 'pass', name });
+    } catch (e) {
+      _failed++;
+      _results.push({ type: 'fail', name, error: e.message });
+    }
   }
+
   function expect(actual) {
     return {
       toBe:                  (e) => { if (actual !== e) throw new Error(`Expected ${JSON.stringify(e)}, got ${JSON.stringify(actual)}`); },
       toEqual:               (e) => { if (JSON.stringify(actual) !== JSON.stringify(e)) throw new Error(`Expected ${JSON.stringify(e)}, got ${JSON.stringify(actual)}`); },
       toBeGreaterThan:       (n) => { if (actual <= n) throw new Error(`Expected ${actual} > ${n}`); },
       toBeLessThan:          (n) => { if (actual >= n) throw new Error(`Expected ${actual} < ${n}`); },
-      toBeGreaterThanOrEqual:(n) => { if (actual < n)  throw new Error(`Expected ${actual} >= ${n}`); },
-      toBeLessThanOrEqual:   (n) => { if (actual > n)  throw new Error(`Expected ${actual} <= ${n}`); },
-      toBeTruthy:            ()  => { if (!actual) throw new Error(`Expected truthy, got ${actual}`); },
-      toBeFalsy:             ()  => { if (actual)  throw new Error(`Expected falsy, got ${actual}`); },
+      toBeGreaterThanOrEqual:(n) => { if (actual  < n) throw new Error(`Expected ${actual} >= ${n}`); },
+      toBeLessThanOrEqual:   (n) => { if (actual  > n) throw new Error(`Expected ${actual} <= ${n}`); },
+      toBeTruthy:            ()  => { if (!actual)  throw new Error(`Expected truthy, got ${actual}`); },
+      toBeFalsy:             ()  => { if (actual)   throw new Error(`Expected falsy, got ${actual}`); },
       toContain:             (s) => { if (!String(actual).includes(String(s))) throw new Error(`Expected "${actual}" to contain "${s}"`); },
       toMatch:               (r) => { if (!r.test(String(actual))) throw new Error(`Expected "${actual}" to match ${r}`); },
       toHaveLength:          (l) => { if (actual.length !== l) throw new Error(`Expected length ${l}, got ${actual.length}`); },
       toBeNull:              ()  => { if (actual !== null) throw new Error(`Expected null, got ${actual}`); },
+      toBeUndefined:         ()  => { if (actual !== undefined) throw new Error(`Expected undefined, got ${actual}`); },
+      toBeInstanceOf:        (C) => { if (!(actual instanceof C)) throw new Error(`Expected instance of ${C.name}`); },
     };
   }
+
+  // Provide not.toThrow sugar used in test suite
+  Function.prototype.toThrow = undefined; // no-op guard
   </script>
+
+  <!-- Load the full test suite -->
   <script src="venueflow.test.js"></script>
+
   <script>
   // ─── Render results ───────────────────────────────────────────────────────
   const t0 = performance.now();
+
   function render() {
     const out    = document.getElementById('output');
     const sumEl  = document.getElementById('summary');
@@ -150,6 +174,7 @@
     if (inSuite) html += '</div>';
     out.innerHTML = html;
   }
+
   render();
   </script>
 </body>
