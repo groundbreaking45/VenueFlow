@@ -1,0 +1,82 @@
+/* ============================================================
+   VenueFlow v2 — Accessibility & Code Quality Additions
+   APPEND this entire block to the END of style.css
+   ============================================================ */
+
+/* ── Skip Navigation Link (WCAG 2.1 AA requirement) ────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  background: var(--accent-blue);
+  color: #fff;
+  padding: .5rem 1.1rem;
+  border-radius: 0 0 8px 8px;
+  font-weight: 700;
+  font-size: .85rem;
+  text-decoration: none;
+  transition: top .2s ease;
+  white-space: nowrap;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ── Enhanced Focus Rings (keyboard navigation) ─────────────── */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Screen-reader-only utility class ───────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ── Reduced-motion support ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .logo-badge,
+  .event-dot {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ── High-contrast text helpers ─────────────────────────────── */
+@media (forced-colors: active) {
+  .nav-tab.active,
+  .filter-pill.active {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .logo-badge {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+  }
+}
